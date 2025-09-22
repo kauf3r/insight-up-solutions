@@ -1,0 +1,33 @@
+{
+  "name": "insight-up-solutions",
+  "version": "1.0.0",
+  "description": "Insight Up Solutions - A comprehensive platform for professional insights and analytics",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter web run dev",
+    "build": "pnpm run build:packages && pnpm --filter web run build",
+    "build:packages": "pnpm --filter db run build",
+    "test": "pnpm --recursive run test",
+    "lint": "pnpm --recursive run lint",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "clean": "pnpm --recursive run clean",
+    "migrate:dev": "pnpm --filter db run migrate:dev",
+    "db:studio": "pnpm --filter db run studio"
+  },
+  "devDependencies": {
+    "prettier": "^3.1.1",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}
