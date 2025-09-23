@@ -38,9 +38,12 @@ graph TD
 
     ServerActions --> NextAuth[NextAuth.js];
     ServerActions --> Prisma[Prisma ORM];
+    ServerActions --> EmailService[Email Service Layer];
     Prisma --> DB[(PostgreSQL Database)];
+    EmailService --> Gmail[Google Workspace Gmail API];
 
     style DB fill:#d3e8f6
+    style Gmail fill:#4285f4
 Architectural Patterns
 Full-stack Framework: Using Next.js as a single, integrated framework for both client-side UI and server-side logic.
 
@@ -62,6 +65,9 @@ ORM	Prisma	5.x	Next-generation ORM for type-safe database access and migrations.
 Database	PostgreSQL	latest	Robust, scalable, and reliable SQL database (hosted via Neon).
 Authentication	NextAuth.js (Auth.js)	5.x	Full-featured authentication solution optimized for Next.js.
 Payments	Stripe SDK	latest	Secure payment processing for the e-commerce functionality.
+Email Service	Google Workspace Gmail API	latest	Enterprise email integration using domain-managed Google Workspace with provider abstraction.
+Email Transport	Nodemailer	latest	Reliable SMTP transport layer with OAuth2 authentication for Google Workspace.
+Google APIs	googleapis	latest	Official Google API client library for service account authentication and Gmail API access.
 Unit Testing	Vitest	latest	A fast and modern testing framework for unit and component tests.
 E2E Testing	Playwright	latest	For robust, end-to-end testing of user flows across browsers.
 Deployment	Vercel	N/A	The hosting platform, providing seamless deployment and infrastructure.
@@ -182,7 +188,7 @@ graph TD
 
     subgraph "Third Parties"
         G[Stripe API]
-        H[Resend API]
+        H[Google Workspace Gmail API]
     end
 
     A --"Calls (HTTPS)"--> B;
