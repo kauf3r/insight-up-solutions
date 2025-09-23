@@ -1,6 +1,7 @@
 'use server';
 
 import { z } from 'zod';
+import { sendInquiryNotification } from '@/lib/email';
 
 // Zod validation schema for Server Action
 const submitInquirySchema = z.object({
@@ -30,17 +31,25 @@ export async function submitInquiry(data: SubmitInquiryParams): Promise<SubmitIn
     // Server-side validation with Zod
     const validatedData = submitInquirySchema.parse(data);
 
-    // TODO: Implement actual inquiry submission logic
-    // This could involve:
-    // - Saving to database via Repository pattern
-    // - Sending email notifications
-    // - Integration with CRM or external services
+    // Send email notification (non-blocking - form success doesn't depend on email)
+    let emailSuccess = false;
+    try {
+      const emailResult = await sendInquiryNotification(validatedData);
+      emailSuccess = emailResult.success;
 
-    // For now, simulate successful submission
-    console.log('Inquiry submitted:', validatedData);
+      if (emailResult.success) {
+        console.log('Email notification sent successfully:', emailResult.messageId);
+      } else {
+        console.error('Email notification failed:', emailResult.error);
+      }
+    } catch (emailError) {
+      console.error('Email service error:', emailError);
+    }
 
-    // Simulate async operation
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // TODO: Save to database via Repository pattern
+    // TODO: Integration with CRM or external services
+
+    console.log('Inquiry submitted:', validatedData, { emailNotified: emailSuccess });
 
     return {
       success: true,

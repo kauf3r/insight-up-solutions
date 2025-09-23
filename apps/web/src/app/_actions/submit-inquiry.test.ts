@@ -1,10 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// Mock the email service before importing the module under test
+vi.mock('@/lib/email', () => ({
+  sendInquiryNotification: vi.fn(),
+}));
+
 import { submitInquiry, SubmitInquiryParams } from './submit-inquiry';
+import { sendInquiryNotification } from '@/lib/email';
+
+// Get the mock
+const mockSendInquiryNotification = vi.mocked(sendInquiryNotification);
 
 // Mock console methods to avoid noise in tests
 beforeEach(() => {
+  vi.clearAllMocks();
   vi.spyOn(console, 'log').mockImplementation(() => {});
   vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  // Default successful email mock
+  mockSendInquiryNotification.mockResolvedValue({
+    success: true,
+    messageId: 'test-email-id',
+  });
 });
 
 describe('submitInquiry Server Action', () => {
@@ -130,7 +147,7 @@ describe('submitInquiry Server Action', () => {
     expect(result.error).toContain('Subject is required');
   });
 
-  it('logs successful submissions', async () => {
+  it('logs successful submissions with email status', async () => {
     const consoleSpy = vi.spyOn(console, 'log');
 
     await submitInquiry(validInquiryData);
@@ -140,7 +157,54 @@ describe('submitInquiry Server Action', () => {
       email: validInquiryData.email,
       message: validInquiryData.message,
       subject: validInquiryData.subject,
-    }));
+    }), { emailNotified: true });
+  });
+
+  it('sends email notification with correct data', async () => {
+    await submitInquiry(validInquiryData);
+
+    expect(mockSendInquiryNotification).toHaveBeenCalledWith({
+      name: validInquiryData.name,
+      email: validInquiryData.email,
+      company: validInquiryData.company,
+      message: validInquiryData.message,
+      subject: validInquiryData.subject,
+    });
+  });
+
+  it('handles email service failures gracefully', async () => {
+    mockSendInquiryNotification.mockResolvedValue({
+      success: false,
+      error: 'SMTP server unavailable',
+    });
+
+    const result = await submitInquiry(validInquiryData);
+
+    // Form submission should still succeed
+    expect(result.success).toBe(true);
+    expect(result.message).toBe('Thank you for your inquiry! We\'ll get back to you within 24 hours.');
+
+    // Email failure should be logged
+    expect(console.error).toHaveBeenCalledWith('Email notification failed:', 'SMTP server unavailable');
+  });
+
+  it('handles email service exceptions gracefully', async () => {
+    mockSendInquiryNotification.mockRejectedValue(new Error('Network timeout'));
+
+    const result = await submitInquiry(validInquiryData);
+
+    // Form submission should still succeed
+    expect(result.success).toBe(true);
+    expect(result.message).toBe('Thank you for your inquiry! We\'ll get back to you within 24 hours.');
+
+    // Email exception should be logged
+    expect(console.error).toHaveBeenCalledWith('Email service error:', expect.any(Error));
+  });
+
+  it('logs successful email sending', async () => {
+    await submitInquiry(validInquiryData);
+
+    expect(console.log).toHaveBeenCalledWith('Email notification sent successfully:', 'test-email-id');
   });
 
   it('logs errors for validation failures', async () => {
@@ -152,7 +216,7 @@ describe('submitInquiry Server Action', () => {
     expect(consoleErrorSpy).toHaveBeenCalledWith('Error submitting inquiry:', expect.any(Error));
   });
 
-  it('simulates async operation delay', async () => {
+  it('processes inquiries efficiently', async () => {
     const startTime = Date.now();
 
     await submitInquiry(validInquiryData);
@@ -160,7 +224,7 @@ describe('submitInquiry Server Action', () => {
     const endTime = Date.now();
     const duration = endTime - startTime;
 
-    // Should take at least 500ms due to simulated delay
-    expect(duration).toBeGreaterThanOrEqual(450); // Allow some tolerance
+    // Should complete quickly with mocked email service
+    expect(duration).toBeLessThan(100);
   });
 });
