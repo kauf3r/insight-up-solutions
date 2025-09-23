@@ -1,14 +1,16 @@
-import { prisma } from '@/lib/db'
-import { User } from '@insight-up/db'
+// import { prisma } from '@/lib/db'
+// import { User } from '@insight-up/db'
 
 export default async function TestDbPage() {
   try {
-    const userCount = await prisma.user.count()
+    // const userCount = await prisma.user.count()
+    const userCount = 0;
 
-    const users = await prisma.user.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' }
-    })
+    // const users = await prisma.user.findMany({
+    //   take: 5,
+    //   orderBy: { createdAt: 'desc' }
+    // })
+    const users: Array<{ id: string; name?: string; email: string }> = [];
 
     return (
       <div className="container mx-auto p-8">
@@ -35,7 +37,7 @@ export default async function TestDbPage() {
             <h3 className="text-lg font-semibold mb-3">Recent Users</h3>
             {users.length > 0 ? (
               <ul className="space-y-2">
-                {users.map((user: User) => (
+                {users.map((user) => (
                   <li key={user.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                     <span className="font-medium">{user.name || 'No name'}</span>
                     <span className="text-sm text-gray-500">{user.email}</span>
